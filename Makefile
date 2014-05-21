@@ -410,6 +410,17 @@ NEBULA_FLAGS	+= -pipe
 NEBULA_FLAGS	+= -Wno-unused -Wno-maybe-uninitialized
 NEBULA_FLAGS	+= --param l1-cache-size=32 --param l1-cache-line-size=32 --param l2-cache-size=2048
 
+ifeq ($(cc-name),clang)
+ifneq ($(CROSS_COMPILE),)
+CLANG_TARGET	:= -target $(notdir $(CROSS_COMPILE:%-=%))
+GCC_TOOLCHAIN	:= $(dir $(CROSS_COMPILE))
+endif
+ifneq ($(GCC_TOOLCHAIN),)
+CLANG_GCC_TC	:= -gcc-toolchain $(GCC_TOOLCHAIN)
+endif
+CLANG_FLAGS	:= $(CLANG_TARGET) $(CLANG_GCC_TC)
+endif
+
 # Use USERINCLUDE when you must reference the UAPI directories only.
 USERINCLUDE    := \
 		-I$(srctree)/arch/$(hdr-arch)/include/uapi \
@@ -427,7 +438,7 @@ LINUXINCLUDE    := \
 		-Iinclude \
 		$(USERINCLUDE)
 
-KBUILD_CPPFLAGS := -D__KERNEL__
+KBUILD_CPPFLAGS := -D__KERNEL__ $(CLANG_FLAGS)
 
 KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-strict-aliasing -fno-common \
@@ -446,7 +457,7 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-aggressive-loop-optimizations \
 		   -Wno-attribute-alias -Wno-stringop-truncation \
 		   $(GRAPHITE) \
-                   -std=gnu89
+		   -std=gnu89 $(CLANG_FLAGS) -w 
 
 # Flash optimization setup
 KBUILD_CFLAGS	+= -Ofast -g0 -DNDEBUG
@@ -474,7 +485,7 @@ LDFLAGS		+= $(call ld-option, --no-fix-cortex-a53-843419)
 
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
-KBUILD_AFLAGS   := -D__ASSEMBLY__ -pipe --param l1-cache-size=32 --param l1-cache-line-size=32 --param l2-cache-size=2048
+KBUILD_AFLAGS   := -D__ASSEMBLY__ $(CLANG_FLAGS) -pipe --param l1-cache-size=32 --param l1-cache-line-size=32 --param l2-cache-size=2048
 KBUILD_AFLAGS_MODULE  := -DMODULE
 KBUILD_CFLAGS_MODULE  := -DMODULE
 KBUILD_LDFLAGS_MODULE := -T $(srctree)/scripts/module-common.lds
