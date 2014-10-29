@@ -81,7 +81,7 @@ static const unsigned freqs[] = { 400000, 300000, 200000, 100000 };
  * So we allow it it to be disabled.
  */
 bool use_spi_crc = 0;
-module_param(use_spi_crc, bool, 0);
+module_param(use_spi_crc, bool, 0644);
 
 #define IOTOP_INTERVAL			4500
 #define IOREAD_DUMP_THRESHOLD		10485760 /* 10MB */
