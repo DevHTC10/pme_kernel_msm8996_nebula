@@ -23,9 +23,11 @@ exit
 fi
 
 # Optimize CPU Threads
-CPUS=$(grep "^processor" /proc/cpuinfo | wc -l)
-JOBS=$(bc <<< "$CPUS+2");
-THREAD="-j$(JOBS)"
+# CPUS=$(grep "^processor" /proc/cpuinfo | wc -l)
+# JOBS=$(bc <<< "$CPUS+2");
+# THREAD="-j$(JOBS)"
+
+THREAD="-j$(grep -c ^processor /proc/cpuinfo)"
 
 # Resources
 KERNEL="Image"
