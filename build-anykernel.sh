@@ -23,9 +23,10 @@ exit
 fi
 
 # Optimize CPU Threads
-CPUS=$(grep "^processor" /proc/cpuinfo | wc -l)
-JOBS=$(bc <<< "$CPUS+2");
-THREAD="-j$(JOBS)"
+# CPUS=$(grep "^processor" /proc/cpuinfo | wc -l)
+# JOBS=$(bc <<< "$CPUS");
+# THREAD="-j$(JOBS)"
+THREAD="-j$(grep -c ^processor /proc/cpuinfo)"
 
 # Resources
 KERNEL="Image"
@@ -697,12 +698,13 @@ function tc_changedestro() {
     dialog --backtitle "Change Toolchain Destro" \
            --radiolist "Choose Toolchain Destro To Use:" 15 50 8 \
 		   01 "PUREFUSIONTC" on\
-           02 "UBERTC" on\
-           03 "LinaroTC" off\
-           04 "CT-NG" off\
-	       05 "SnapTC" off\
-           06 "GoogleTC" off\
-	       07 "QUVNTNM" off 2>$_temp
+		   02 "PUREFUSIONLLVM" off\
+           03 "UBERTC" off\
+           04 "LinaroTC" off\
+           05 "CT-NG" off\
+	       06 "SnapTC" off\
+           07 "GoogleTC" off\
+	       08 "QUVNTNM" off 2>$_temp
     result=`cat $_temp`
 	TC_OLD="$TC_DESTRO"
 	if [ "$result" == 01 ]; then
@@ -710,26 +712,30 @@ function tc_changedestro() {
 		TC_DESTRO="PUREFUSIONTC"
 	fi
 	if [ "$result" == 02 ]; then
+	echo "PureFusionLLVM"
+		TC_DESTRO="PUREFUSIONLLVM"
+	fi
+	if [ "$result" == 03 ]; then
 	echo "UBER"
 		TC_DESTRO="UBERTC"
 	fi
-	if [ "$result" == 03 ]; then
+	if [ "$result" == 04 ]; then
 		echo "LinaroTC"
 		TC_DESTRO="LinaroTC"
 	fi
-	if [ "$result" == 04 ]; then
+	if [ "$result" == 05 ]; then
 		echo "Crosstool-ng"
 		TC_DESTRO="CT-NG"
 	fi
-	if [ "$result" == 05 ]; then
+	if [ "$result" == 06 ]; then
 		echo "SnapDragonTC"
 		TC_DESTRO="SnapTC"
 	fi
-	if [ "$result" == 06 ]; then
+	if [ "$result" == 07 ]; then
 		echo "GoogleTC"
 		TC_DESTRO="GoogleTC"
 	fi
-	if [ "$result" == 07 ]; then
+	if [ "$result" == 08 ]; then
 		echo "QUVNTNM"
 		TC_DESTRO="QUVNTNM"
 	fi
