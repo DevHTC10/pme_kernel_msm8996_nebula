@@ -444,6 +444,7 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -Wno-discarded-array-qualifiers -Wno-incompatible-pointer-types \
 		   -Wno-return-local-addr -Wno-nonnull -fno-delete-null-pointer-checks \
 		   -fno-aggressive-loop-optimizations \
+		   -Wno-attribute-alias -Wno-stringop-truncation \
 		   $(GRAPHITE) \
                    -std=gnu89
 
