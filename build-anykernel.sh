@@ -1,10 +1,10 @@
 #!/bin/bash
 
 ###########################################################################################
-# Nebulix-Kernel Build Script (C) 2016   UpDated: 05/27/2017                              #
-#  Modified By Eliminater74   Original By RenderBroken                                    #
+# Nebulix-Kernel Build Script (C) 2018   UpDated: 01/13/2018                              #
+# ReWritten By Eliminater74 || Original By RenderBroken                                   #
 #                                                                                         #
-# Build Script W/AnyKernel V2 Support Plus        07/22/2015                              #
+# Build Script W/AnyKernel V2 Support Plus        07/22/2015 <-- Original Build Date      #
 ###########################################################################################
 ###                                                                     ###
 ### DO NOT EDIT ANYTHING BELOW THIS LINE: EDIT ONLY build-anykernel.cfg ###
@@ -22,8 +22,12 @@ echo "Configure File is missing..."
 exit
 fi
 
+# Optimize CPU Threads
+CPUS=$(grep "^processor" /proc/cpuinfo | wc -l)
+JOBS=$(bc <<< "$CPUS+2");
+THREAD="-j$(JOBS)"
+
 # Resources
-THREAD="-j$(grep -c ^processor /proc/cpuinfo)"
 KERNEL="Image"
 DTBIMAGE="dtb"
 
@@ -352,7 +356,6 @@ function SET_LOCALVERSION() {
     fi
 }
 
-
 ## Pipe Output to Dialog Box ##
 function pipe_output() {
 	exec &> >(tee -a screen.log)
@@ -373,95 +376,6 @@ function check_filesize() {
     echo size is under $minimumsize kilobytes
 	echo Size is: $actualsize
 fi
-}
-
-## Bump all Defconfigs ##
-function bump_defconfigs() {
-	dialog --inputbox \
-		"Enter Version NFO:" 0 0 2> /tmp/inputbox.tmp.$$
-		retval=$?
-		input=`cat /tmp/inputbox.tmp.$$`
-		rm -f /tmp/inputbox.tmp.$$
-			if [ -z "$input" ]; then
-			echo "String is empty"
-			exit
-			fi
-		case $retval in
-		0)
-		BUMP_REV="$input"
-		OLD_REV="$REV"
-		REV="$input";;
-		1)
-		echo "Cancel pressed.";;
-		esac
-		replace_string $REPACK_DIR/anykernel.sh "kernel.string" "Rev$OLD_REV" "Rev$REV"
-		replace_string $KERNEL_DIR/build-anykernel.cfg "REV" "$OLD_REV" "$REV"
-		OIFS=$IFS
-		IFS=';'
-		arr2=$DEVICES
-		for x in $arr2
-		do
-		DEFCONFIG="${x}_defconfig"
-		cd $DEFCONFIGS
-		sed -i '9s/.*/CONFIG_LOCALVERSION="-${KNAME}'$BUMP_REV'"/' $DEFCONFIG
-		
-		cd $KERNEL_DIR
-done
-
-IFS=$OIFS
-TITLE="Version Bumped"
-BACKTITLE="Version Bumped"
-INFOBOX="Bumped to Version $BUMP_REV"
-message
-}
-
-## Bump UKM Synapse Version ##
-function bump_uci() {
-	dialog --inputbox \
-		"Enter Version NFO:" 0 0 2> /tmp/inputbox.tmp.$$
-		retval=$?
-		input=`cat /tmp/inputbox.tmp.$$`
-		rm -f /tmp/inputbox.tmp.$$
-			if [ -z "$input" ]; then
-			echo "String is empty"
-			exit
-			fi
-		case $retval in
-		0)
-		BUMP_UCI_REV="$input"
-		OLD_UCI_REV="$UCI_REV"
-		UCI_REV="$input";;
-		1)
-		echo "Cancel pressed.";;
-		esac
-		replace_string $STAND_ALONE_UCI_DIR/anykernel.sh "kernel.string" "$OLD_UCI_REV" "$UCI_REV"
-		replace_string $KERNEL_DIR/build-anykernel.cfg "UCI_REV" "$OLD_UCI_REV" "$UCI_REV"
-IFS=$OIFS
-TITLE="Version Bumped"
-BACKTITLE="Version Bumped"
-INFOBOX="Bumped to Version $BUMP_UCI_REV"
-message
-}
-
-## Build Stand Alone Synapse UKM Scripts Zip Package ##
-function Build_Stand_Alone_Synapse() {
-	cd $STAND_ALONE_UCI_DIR
-	echo "Cleaning out OLD ramdisk Files.."
-	rm -rf data/UKM
-	rm -rf ramdisk/*
-	cd $KERNEL_DIR
-	echo "Copying New ramdisk/res Scripts Over.."
-	cp -vr $RAMDISK_DIR $STAND_ALONE_UCI_DIR
-	cd $STAND_ALONE_UCI_DIR
-	echo "Creating Synapse Stand Alone Zip.."
-	zip -r9 Nebula_Synapse_Scripts_Rev"$UCI_REV"_"$KVER".zip *
-		mv Nebula_Synapse_Scripts_Rev"$UCI_REV"_"$KVER".zip $ZIP_MOVE
-		rm -rf Nebula_Synapse_Scripts_Rev"$UCI_REV"_"$KVER".zip
-		cd $KERNEL_DIR
-TITLE="Nebula Synapse Stand Alone Created"
-BACKTITLE="Nebula Synapse Stand Alone"
-INFOBOX="Nebula_Synapse_Rev'$UCI_REV'_'$KVER'.zip \n\n Created Successfully"
-message	
 }
 
 ## Unversal Message Box ##
@@ -782,35 +696,40 @@ done
 function tc_changedestro() {
     dialog --backtitle "Change Toolchain Destro" \
            --radiolist "Choose Toolchain Destro To Use:" 15 50 8 \
-           01 "UBERTC" on\
-           02 "LinaroTC" off\
-           03 "CT-NG" off\
-	   04 "SnapTC" off\
-           05 "GoogleTC" off\
-	   06 "QUVNTNM" off 2>$_temp
+		   01 "PUREFUSIONTC" on\
+           02 "UBERTC" on\
+           03 "LinaroTC" off\
+           04 "CT-NG" off\
+	       05 "SnapTC" off\
+           06 "GoogleTC" off\
+	       07 "QUVNTNM" off 2>$_temp
     result=`cat $_temp`
 	TC_OLD="$TC_DESTRO"
 	if [ "$result" == 01 ]; then
+	echo "PureFusionTC"
+		TC_DESTRO="PUREFUSIONTC"
+	fi
+	if [ "$result" == 02 ]; then
 	echo "UBER"
 		TC_DESTRO="UBERTC"
 	fi
-	if [ "$result" == 02 ]; then
+	if [ "$result" == 03 ]; then
 		echo "LinaroTC"
 		TC_DESTRO="LinaroTC"
 	fi
-	if [ "$result" == 03 ]; then
+	if [ "$result" == 04 ]; then
 		echo "Crosstool-ng"
 		TC_DESTRO="CT-NG"
 	fi
-	if [ "$result" == 04 ]; then
+	if [ "$result" == 05 ]; then
 		echo "SnapDragonTC"
 		TC_DESTRO="SnapTC"
 	fi
-	if [ "$result" == 05 ]; then
+	if [ "$result" == 06 ]; then
 		echo "GoogleTC"
 		TC_DESTRO="GoogleTC"
 	fi
-	if [ "$result" == 06 ]; then
+	if [ "$result" == 07 ]; then
 		echo "QUVNTNM"
 		TC_DESTRO="QUVNTNM"
 	fi
@@ -965,9 +884,6 @@ dialog --clear  --help-button --backtitle "Linux Shell Script Tutorial" \
 		"TC" "TC: $TC_NAME" \
 		"Log" "Logging Options [Log: $ERROR_LOG]" \
 		"Ccache" "Clear Ccache" \
-		"Bump" "Bump Version" \
-		"SA_Synapse" "Build UCI Scripts (Stand Alone)" \
-		"bump_uci" "Bump UCI Version" \
 		"Build_Zip" "Build Final Kernel Zip" \
 		"Settings" "Settings" \
 		"Test" "Testing Stage Area" \
@@ -984,9 +900,6 @@ case $menuitem in
 		TC) tc_menu ;;
 		Log) menu_log ;;
 		Ccache) echo "Clearing Ccache.."; rm -rf ${HOME}/.ccache ;;
-		Bump) bump_defconfigs ;;
-		SA_Synapse) Build_Stand_Alone_Synapse ;;
-		bump_uci) bump_uci ;;
 		Build_Zip) make_zip; exit;;
 		Settings) menu_settings ;;
 		Test) script_settings ; exit ;;
