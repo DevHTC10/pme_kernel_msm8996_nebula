@@ -460,6 +460,29 @@ unset ERROR_LOG
 exit
 }
 
+function update_clang_config() {
+  ${KERNEL_DIR}/scripts/config --file ${OUTPUT_DIR}/.config \
+    -d CC_WERROR
+  (cd ${OUTPUT_DIR} && \
+    make O=${OUTPUT_DIR} ARCH=$ARCH CROSS_COMPILE=${CLANG_PATH} $DEFCONFIG)
+	echo "test: ARCH=$ARCH CROSS_COMPILE=${CLANG_PATH} $DEFCONFIG"
+	echo "Update Clang Configs:"
+}
+
+function CHECK_CLANG {
+export ARCH=arm64
+export CC=clang
+export PATH=/home/eliminater74/Builds/kernel/toolchains/PUREFUSIONLLVM/clang_linux-x86_7.x/bin/:$PATH
+export CLANG_PATH=/home/eliminater74/Builds/kernel/toolchains/PUREFUSIONLLVM/clang_linux-x86_7.x/bin/clang
+export CLANG_TRIPLE=aarch64-linux-gnu-
+export CROSS_COMPILE=$CROSS_COMPILE
+export DEFCONFIG=$DEFCONFIG
+update_clang_config
+export LINUX_GCC_CROSS_COMPILE_PREBUILTS_BIN=$CROSS_COMPILE
+ echo "Using Clang:"
+
+}
+
 function make_kernel {
 		echo
 		TIME_START
@@ -467,6 +490,7 @@ function make_kernel {
 		echo
 		mkdir -p $OUTPUT_DIR
 		make O=$OUTPUT_DIR $DEFCONFIG
+		CHECK_CLANG
 		make O=$OUTPUT_DIR $THREAD INSTALL_MOD_STRIP=1
 }
 
