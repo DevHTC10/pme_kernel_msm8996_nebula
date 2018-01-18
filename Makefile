@@ -298,13 +298,13 @@ CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
 	  else echo sh; fi ; fi)
 
 # Set optimization flags for gcc
-FLAGS := -march=armv8-a+crypto -mcpu=cortex-a72.cortex-a53 -mtune=cortex-a72.cortex-a53 -fmodulo-sched -fmodulo-sched-allow-regmoves -fno-gcse-after-reload -fno-tree-vectorize -mlow-precision-recip-sqrt -mpc-relative-literal-loads -ffast-math -O3 -fgraphite -fgraphite-identity -floop-strip-mine -fmodulo-sched-allow-regmoves -ftree-loop-vectorize -ftree-slp-vectorize -fvect-cost-model -fsingle-precision-constant -fpredictive-commoning -Wno-maybe-uninitialized -Wno-misleading-indentation -Wno-array-bounds -Wno-shift-overflow
+FLAGS := -march=armv8-a+crypto -mcpu=cortex-a72.cortex-a53 -mtune=cortex-a72.cortex-a53 -fmodulo-sched -fmodulo-sched-allow-regmoves -fno-gcse-after-reload -fno-tree-vectorize -mlow-precision-recip-sqrt -mpc-relative-literal-loads -ffast-math -O3 -fgraphite -fgraphite-identity -floop-strip-mine -fmodulo-sched-allow-regmoves -ftree-loop-vectorize -ftree-slp-vectorize -fvect-cost-model -fsingle-precision-constant -fpredictive-commoning -Wno-uninitialized -Wno-misleading-indentation -Wno-array-bounds -Wno-shift-overflow
 GRAPHITE	= -fgraphite-identity -floop-parallelize-all -ftree-loop-linear -floop-interchange -floop-strip-mine -floop-block -floop-flatten
 
 HOSTCC       = $(CCACHE) gcc
 HOSTCXX      = $(CCACHE) g++
-HOSTCFLAGS   = $(GRAPHITE) -Wall -Wmissing-prototypes -Wstrict-prototypes -Ofast -fomit-frame-pointer -fgcse-las -fgraphite -floop-flatten -floop-parallelize-all -ftree-loop-linear -floop-interchange -floop-strip-mine -floop-block -pipe -Wno-unused-parameter -Wno-sign-compare -Wno-missing-field-initializers -Wno-unused-variable -Wno-unused-value
-HOSTCXXFLAGS = -Ofast -fgcse-las -fgraphite -floop-flatten -floop-parallelize-all -ftree-loop-linear -floop-interchange -floop-strip-mine -floop-block -pipe
+HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -Ofast -fomit-frame-pointer -fgcse-las -pipe -Wno-unused-parameter -Wno-sign-compare -Wno-missing-field-initializers -Wno-unused-variable -Wno-unused-value
+HOSTCXXFLAGS = -Ofast -fgcse-las -pipe
 
 ifeq ($(shell $(HOSTCC) -v 2>&1 | grep -c "clang version"), 1)
 HOSTCFLAGS  += -Wno-unused-value -Wno-unused-parameter \
@@ -398,7 +398,7 @@ CFLAGS_GCOV	= -fprofile-arcs -ftest-coverage -fno-tree-loop-im
 
 # Nebula's Optimizations
 NEBULA_FLAGS	+= -pipe
-NEBULA_FLAGS	+= -Wno-unused -Wno-maybe-uninitialized
+NEBULA_FLAGS	+= -Wno-unused -Wno-uninitialized
 NEBULA_FLAGS	+= --param l1-cache-size=32 --param l1-cache-line-size=32 --param l2-cache-size=2048
 
 ifeq ($(cc-name),clang)
@@ -438,20 +438,15 @@ KBUILD_CPPFLAGS := -D__KERNEL__ $(CLANG_FLAGS)
 KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-strict-aliasing -fno-common \
 		   -Werror-implicit-function-declaration \
-		   -Wno-format-security -Wno-unused -Wno-maybe-uninitialized \
-                   -Wno-array-bounds -Wno-memset-transposed-args \
-		   -Wno-format-truncation -Wno-bool-operation -Wno-bool-compare \
-		   -Wno-stringop-overflow -Wno-stringop-overflow \
-		   -ffast-math -Wno-multistatement-macros -Wno-duplicate-decl-specifier \
-		   -Wno-memset-elt-size -Wno-format-overflow -fno-store-merging \
-		   -mcpu=cortex-a57.cortex-a53+crc+crypto -mtune=cortex-a57.cortex-a53 \
-                   -march=armv8-a+crc \
-                   -funswitch-loops -fpredictive-commoning -fgcse-after-reload \
-		   -Wno-discarded-array-qualifiers -Wno-incompatible-pointer-types \
-		   -Wno-return-local-addr -Wno-nonnull -fno-delete-null-pointer-checks \
-		   -fno-aggressive-loop-optimizations \
-		   -Wno-attribute-alias -Wno-stringop-truncation \
-		   $(GRAPHITE) \
+		   -Wno-format-security -Wno-unused -Wno-uninitialized \
+                   -Wno-array-bounds \
+		   -Wno-bool-conversion -Wno-shift-overflow \
+		   -ffast-math -Wno-unused-macros -Wno-duplicate-decl-specifier \
+		   -Wno-vec-elem-size -Wno-shift-overflow \
+		   -mtune=cortex-a57.cortex-a53 \
+		   -Wno-ignored-qualifiers -Wno-incompatible-pointer-types \
+		   -Wno-return-stack-address -Wno-nonnull \
+		   -Wno-attributes -Wno-string-conversion \
 		   $(CLANG_FLAGS) \
                    -std=gnu89
 
@@ -466,7 +461,7 @@ LD		+= --strip-debug -Ofast
 # KBUILD_CFLAGS	+= $(GEN_OPT_FLAGS)
 
 # Needed to unbreak GCC 7.x and above
-BUILD_CFLAGS   += $(call cc-option,-fno-store-merging,)
+# BUILD_CFLAGS   += $(call cc-option,-fno-store-merging,)
 
 # Snapdragon 820 doesn't need 835769/843419 erratum fixes
 # some toolchain enables those fixes automatically, so opt-out
@@ -697,7 +692,7 @@ all: vmlinux
 #ARCH_CFLAGS :=
 #include arch/$(SRCARCH)/Makefile
 
-KBUILD_CFLAGS	+= $(call cc-option,-fno-delete-null-pointer-checks,)
+#KBUILD_CFLAGS	+= $(call cc-option,-fno-delete-null-pointer-checks,)
 KBUILD_CFLAGS	+= $(call cc-disable-warning,maybe-uninitialized,)
 KBUILD_CFLAGS	+= $(call cc-disable-warning,frame-address,)
 KBUILD_CFLAGS	+= $(call cc-disable-warning, format-truncation)
