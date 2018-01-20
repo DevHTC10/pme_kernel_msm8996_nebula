@@ -282,6 +282,7 @@ static int btfm_slim_dai_get_channel_map(struct snd_soc_dai *dai,
 		*tx_num = 0;
 		*rx_num = num;
 		break;
+		return -EINVAL;
 	}
 
 	do {
