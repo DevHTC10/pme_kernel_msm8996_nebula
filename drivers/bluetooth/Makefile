@@ -24,7 +24,7 @@ obj-$(CONFIG_MSM_BT_POWER)	+= bluetooth-power.o
 
 # HTC_BT
 obj-$(CONFIG_ARCH_MSM8996)  += board-8996-rfkill.o
-obj-$(CONFIG_ARCH_MSM8996)  += htc_bdaddress.o
+# obj-$(CONFIG_ARCH_MSM8996)  += htc_bdaddress.o
 obj-$(CONFIG_ARCH_MSM8996)  += bluesleep.o
 # HTC_BT
 
